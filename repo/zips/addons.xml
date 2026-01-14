@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='utf-8'?>
+<addons><addon id="plugin.video.tvworks" name="TVWorks" version="1.0.1+matrix.1" provider-name="tvworks"> 
+<requires>
+    <import addon="xbmc.python" version="3.0.0" />
+    <import addon="script.module.requests" optional="true" />
+    <import addon="script.module.simplejson" optional="true" />
+	<import addon="script.module.kodi-six" optional="true" />
+</requires>  
+<extension point="xbmc.python.pluginsource" library="default.py">
+	<provides>video</provides>
+</extension>   
+<extension point="xbmc.addon.metadata">
+	<summary lang="en">Addon example</summary>
+	<summary lang="pt">Addon modelo</summary>
+	<description lang="en">Addon for kodi 19</description>
+	<description lang="pt">Addon for kodi 19</description>
+    <disclaimer lang="en">The author is in no way affiliated with Kodi, Team Kodi or the XBMC Foundation. This is a non-profit resource.</disclaimer>
+	<disclaimer lang="pt">O autor não é de forma alguma afiliado ao Kodi, Team Kodi ou a XBMC Foundation. Este é um recurso sem fins lucrativos.</disclaimer>
+    <platform>all</platform>
+	<assets>
+       <icon>icon.png</icon>
+       <fanart>fanart.jpg</fanart>
+    </assets>
+	<news>
+v1.0.0.matrix.1
+- Addon modelo
+	</news>
+</extension>
+</addon><addon id="repository.tvworks" name="TVWorks" version="1.0" provider-name="tvworks">
+    <extension point="xbmc.addon.repository" name="TVWorks">
+        <dir>
+            <info compressed="false">https://raw.githubusercontent.com/tvworks/repository.tvworks/master/repo/zips/addons.xml</info>
+            <checksum>https://raw.githubusercontent.com/tvworks/repository.tvworks/master/repo/zips/addons.xml.md5</checksum>
+            <datadir zip="true">https://raw.githubusercontent.com/tvworks/repository.tvworks/master/repo/zips/</datadir>
+        </dir>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary>TVWorks</summary>
+        <description>TVWorks Repo</description>
+        <disclaimer />
+        <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>fanart.jpg</fanart>
+        </assets>
+    </extension>
+</addon></addons>
