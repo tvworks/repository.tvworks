@@ -1,193 +1,80 @@
 # -*- coding: utf-8 -*-
 """
 
-    Copyright (C) 2018-2025 plugin.video.youtube
+    Copyright (C) 2018-2018 plugin.video.youtube
 
     SPDX-License-Identifier: GPL-2.0-only
     See LICENSES/GPL-2.0-only for more information.
 """
 
-from __future__ import absolute_import, division, unicode_literals
-
-import json
 import os
-from io import open
+import json
+from copy import deepcopy
 
-from .. import logging
-from ..constants import DATA_PATH, FILE_READ, FILE_WRITE
-from ..utils.convert_format import to_unicode
-from ..utils.file_system import make_dirs
-from ..utils.methods import merge_dicts
+import xbmcaddon
+import xbmcvfs
+import xbmc
+
+from .. import logger
 
 
 class JSONStore(object):
-    log = logging.getLogger(__name__)
+    def __init__(self, filename):
+        addon_id = 'plugin.video.youtube'
+        addon = xbmcaddon.Addon(addon_id)
 
-    BASE_PATH = make_dirs(DATA_PATH)
+        try:
+            self.base_path = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+        except AttributeError:
+            self.base_path = xbmc.translatePath(addon.getAddonInfo('profile'))
 
-    _process_data = None
+        self.filename = os.path.join(self.base_path, filename)
 
-    def __init__(self, filename, context):
-        if self.BASE_PATH:
-            self.filepath = os.path.join(self.BASE_PATH, filename)
-        else:
-            self.log.error_trace(('Addon data directory not available',
-                                  'Path: %s'),
-                                 DATA_PATH,
-                                 stacklevel=2)
-            self.filepath = None
+        self._data = None
+        self.load()
+        self.set_defaults()
 
-        self._context = context
-        self._loaded = False
-        self._data = {}
-        self.init()
-
-    def init(self):
-        if self.load(stacklevel=4):
-            self._loaded = True
-            self.set_defaults()
-        else:
-            self.set_defaults(reset=True)
-        return self._loaded
-
-    def set_defaults(self, reset=False):
+    def set_defaults(self):
         raise NotImplementedError
 
-    def save(self, data, update=False, process=True, ipc=True, stacklevel=2):
-        filepath = self.filepath
-        if not filepath:
-            return False
+    def save(self, data):
+        if data != self._data:
+            self._data = deepcopy(data)
+            if not xbmcvfs.exists(self.base_path):
+                if not self.make_dirs(self.base_path):
+                    logger.log_debug('JSONStore Save |{filename}| failed to create directories.'.format(filename=self.filename.encode("utf-8")))
+                    return
+            with open(self.filename, 'w') as jsonfile:
+                logger.log_debug('JSONStore Save |{filename}|'.format(filename=self.filename.encode("utf-8")))
+                json.dump(self._data, jsonfile, indent=4, sort_keys=True)
 
-        if update:
-            data = merge_dicts(self._data, data)
-        if data == self._data:
-            self.log.debug(('Data unchanged', 'File: %s'),
-                           filepath,
-                           stacklevel=stacklevel)
-            return None
-        self.log.debug(('Saving', 'File: %s'),
-                       filepath,
-                       stacklevel=stacklevel)
-        try:
-            if not data:
-                raise ValueError
-            _data = json.dumps(
-                data, ensure_ascii=False, indent=4, sort_keys=True
-            )
-            self._data = json.loads(
-                _data,
-                object_pairs_hook=(self._process_data if process else None),
-            )
+    def load(self):
+        if xbmcvfs.exists(self.filename):
+            with open(self.filename, 'r') as jsonfile:
+                data = json.load(jsonfile)
+                self._data = data
+                logger.log_debug('JSONStore Load |{filename}|'.format(filename=self.filename.encode("utf-8")))
+        else:
+            self._data = dict()
 
-            if ipc:
-                self._context.get_ui().set_property(
-                    '-'.join((FILE_WRITE, filepath)),
-                    to_unicode(_data),
-                    log_value='<redacted>',
-                )
-                response = self._context.ipc_exec(
-                    FILE_WRITE,
-                    timeout=5,
-                    payload={'filepath': filepath},
-                    raise_exc=True,
-                )
-                if response is False:
-                    raise IOError
-                if response is None:
-                    self.log.debug(('Data unchanged', 'File: %s'),
-                                   filepath,
-                                   stacklevel=stacklevel)
-                    return None
-            else:
-                with open(filepath, mode='w', encoding='utf-8') as file:
-                    file.write(to_unicode(_data))
-        except (RuntimeError, IOError, OSError):
-            self.log.exception(('Access error', 'File: %s'),
-                               filepath,
-                               stacklevel=stacklevel)
-            return False
-        except (TypeError, ValueError):
-            self.log.exception(('Invalid data', 'Data: {data!r}'),
-                               data=data,
-                               stacklevel=stacklevel)
-            self.set_defaults(reset=True)
-            return False
+    def get_data(self):
+        return deepcopy(self._data)
+
+    @staticmethod
+    def make_dirs(path):
+        if not path.endswith('/'):
+            path = ''.join([path, '/'])
+        path = xbmc.translatePath(path)
+        if not xbmcvfs.exists(path):
+            try:
+                _ = xbmcvfs.mkdirs(path)
+            except:
+                pass
+            if not xbmcvfs.exists(path):
+                try:
+                    os.makedirs(path)
+                except:
+                    pass
+            return xbmcvfs.exists(path)
+
         return True
-
-    def load(self, process=True, ipc=True, stacklevel=2):
-        filepath = self.filepath
-        if not filepath:
-            return False
-
-        self.log.debug(('Loading', 'File: %s'),
-                       filepath,
-                       stacklevel=stacklevel)
-        try:
-            if ipc:
-                if self._context.ipc_exec(
-                        FILE_READ,
-                        timeout=5,
-                        payload={'filepath': filepath},
-                        raise_exc=True,
-                ) is not False:
-                    data = self._context.get_ui().get_property(
-                        '-'.join((FILE_READ, filepath)),
-                        log_value='<redacted>',
-                    )
-                else:
-                    raise IOError
-            else:
-                with open(filepath, mode='r', encoding='utf-8') as file:
-                    data = file.read()
-            if not data:
-                raise ValueError
-            self._data = json.loads(
-                data,
-                object_pairs_hook=(self._process_data if process else None),
-            )
-        except (RuntimeError, IOError, OSError):
-            self.log.exception(('Access error', 'File: %s'),
-                               filepath,
-                               stacklevel=stacklevel)
-            return False
-        except (TypeError, ValueError):
-            self.log.exception(('Invalid data', 'Data: {data!r}'),
-                               data=data,
-                               stacklevel=stacklevel)
-            return False
-        return True
-
-    def get_data(self, process=True, fallback=True, stacklevel=2):
-        if not self._loaded:
-            self.init()
-        data = self._data
-
-        try:
-            if not data:
-                raise ValueError
-            return json.loads(
-                json.dumps(data, ensure_ascii=False),
-                object_pairs_hook=(self._process_data if process else None),
-            )
-        except (TypeError, ValueError) as exc:
-            self.log.exception(('Invalid data', 'Data: {data!r}'),
-                               data=data,
-                               stacklevel=stacklevel)
-            if fallback:
-                self.set_defaults(reset=True)
-                return self.get_data(process=process, fallback=False)
-            if self._loaded:
-                raise exc
-            return data
-
-    def load_data(self, data, process=True, stacklevel=2):
-        try:
-            return json.loads(
-                data,
-                object_pairs_hook=(self._process_data if process else None),
-            )
-        except (TypeError, ValueError):
-            self.log.exception(('Invalid data', 'Data: {data!r}'),
-                               data=data,
-                               stacklevel=stacklevel)
-        return {}

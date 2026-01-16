@@ -1,67 +1,82 @@
 # -*- coding: utf-8 -*-
 """
 
-    Copyright (C) 2018-2025 plugin.video.youtube
+    Copyright (C) 2018-2018 plugin.video.youtube
 
     SPDX-License-Identifier: GPL-2.0-only
     See LICENSES/GPL-2.0-only for more information.
 """
 
-from __future__ import absolute_import, division, unicode_literals
-
-from youtube_plugin.kodion import logging
-from youtube_plugin.kodion.constants import ADDON_ID
-from youtube_plugin.kodion.context import XbmcContext
-from youtube_plugin.youtube.helper import yt_login
 from youtube_plugin.youtube.provider import Provider
-from youtube_plugin.youtube.youtube_exceptions import LoginException
+from youtube_plugin.kodion.impl import Context
+from youtube_plugin.youtube.helper import yt_login
+
+# noinspection PyUnresolvedReferences
+from youtube_plugin.youtube.youtube_exceptions import LoginException  # NOQA
 
 
-__all__ = (
-    'LoginException',
-    'reset_access_tokens',
-    'sign_in',
-    'sign_out',
-)
+SIGN_IN = 'in'
+SIGN_OUT = 'out'
 
 
-def _auth(addon_id, mode=yt_login.SIGN_IN):
+def __add_new_developer(addon_id):
+    """
+
+    :param addon_id: id of the add-on being added
+    :return:
+    """
+    params = {'addon_id': addon_id}
+    context = Context(params=params, plugin_id='plugin.video.youtube')
+
+    access_manager = context.get_access_manager()
+    developers = access_manager.get_developers()
+    if not developers.get(addon_id, None):
+        developers[addon_id] = access_manager.get_new_developer()
+        access_manager.set_developers(developers)
+        context.log_debug('Creating developer user: |%s|' % addon_id)
+
+
+def __auth(addon_id, mode=SIGN_IN):
     """
 
     :param addon_id: id of the add-on being signed in
     :param mode: SIGN_IN or SIGN_OUT
     :return: addon provider, context and client
     """
-    if not addon_id or addon_id == ADDON_ID:
-        logging.error_trace('Invalid addon_id: %r', addon_id)
-        return False
-
+    if not addon_id or addon_id == 'plugin.video.youtube':
+        context = Context(plugin_id='plugin.video.youtube')
+        context.log_error('Developer authentication: |%s| Invalid addon_id' % addon_id)
+        return
+    __add_new_developer(addon_id)
+    params = {'addon_id': addon_id}
     provider = Provider()
-    context = XbmcContext(params={'addon_id': addon_id})
+    context = Context(params=params, plugin_id='plugin.video.youtube')
 
-    access_manager = context.get_access_manager()
-    if access_manager.add_new_developer(addon_id):
-        logging.debug('Creating developer user: %r', addon_id)
+    _ = provider.get_client(context=context)  # NOQA
+    logged_in = provider.is_logged_in()
+    if mode == SIGN_IN:
+        if logged_in:
+            return True
+        else:
+            provider.reset_client()
+            yt_login.process(mode, provider, context, sign_out_refresh=False)
+    elif mode == SIGN_OUT:
+        if not logged_in:
+            return True
+        else:
+            provider.reset_client()
+            try:
+                yt_login.process(mode, provider, context, sign_out_refresh=False)
+            except:
+                reset_access_tokens(addon_id)
+    else:
+        raise Exception('Unknown mode: |%s|' % mode)
 
-    client = provider.get_client(context=context)
-
-    if mode == yt_login.SIGN_IN:
-        if client.logged_in:
-            yt_login.process(yt_login.SIGN_OUT,
-                             provider,
-                             context,
-                             client=client,
-                             refresh=False)
-            client = None
-    elif mode != yt_login.SIGN_OUT:
-        raise Exception('Unknown mode: %r' % mode)
-
-    yt_login.process(mode, provider, context, client=client, refresh=False)
-
-    logged_in = provider.get_client(context=context).logged_in
-    if mode == yt_login.SIGN_IN:
-        return logged_in
-    return not logged_in
+    _ = provider.get_client(context=context)  # NOQA
+    if mode == SIGN_IN:
+        return provider.is_logged_in()
+    else:
+        return not provider.is_logged_in()
 
 
 def sign_in(addon_id):
@@ -86,8 +101,8 @@ def sign_in(addon_id):
 
     try:
         signed_in = youtube_authentication.sign_in(addon_id='plugin.video.example')  # refreshes access tokens if already signed in
-    except youtube_authentication.LoginException as exc:
-        error_message = exc.get_message()
+    except youtube_authentication.LoginException as e:
+        error_message = e.get_message()
         # handle error
         signed_in = False
 
@@ -99,7 +114,7 @@ def sign_in(addon_id):
     :return: boolean, True when signed in
     """
 
-    return _auth(addon_id, mode=yt_login.SIGN_IN)
+    return __auth(addon_id, mode=SIGN_IN)
 
 
 def sign_out(addon_id):
@@ -130,7 +145,7 @@ def sign_out(addon_id):
     :return: boolean, True when signed out
     """
 
-    return _auth(addon_id, mode=yt_login.SIGN_OUT)
+    return __auth(addon_id, mode=SIGN_OUT)
 
 
 def reset_access_tokens(addon_id):
@@ -139,11 +154,12 @@ def reset_access_tokens(addon_id):
     :param addon_id: id of the add-on having it's access tokens reset
     :return:
     """
-    if not addon_id or addon_id == ADDON_ID:
-        logging.error_trace('Invalid addon_id: %r', addon_id)
+    if not addon_id or addon_id == 'plugin.video.youtube':
+        context = Context(plugin_id='plugin.video.youtube')
+        context.log_error('Developer reset access tokens: |%s| Invalid addon_id' % addon_id)
         return
+    params = {'addon_id': addon_id}
+    context = Context(params=params, plugin_id='plugin.video.youtube')
 
-    context = XbmcContext(params={'addon_id': addon_id})
-    context.get_access_manager().update_access_token(
-        addon_id, access_token='', expiry=-1, refresh_token=''
-    )
+    access_manager = context.get_access_manager()
+    access_manager.update_dev_access_token(addon_id, access_token='', refresh_token='')

@@ -2,33 +2,25 @@
 """
 
     Copyright (C) 2014-2016 bromix (plugin.video.youtube)
-    Copyright (C) 2016-2025 plugin.video.youtube
+    Copyright (C) 2016-2018 plugin.video.youtube
 
     SPDX-License-Identifier: GPL-2.0-only
     See LICENSES/GPL-2.0-only for more information.
 """
 
-from __future__ import absolute_import, division, unicode_literals
-
-
 key_sets = {
     'youtube-tv': {
-        'api_key': 'QUl6YVN5QzZmdlpTSkhBN1Z6NWo4akNpS1J0N3RVSU9xakUyTjNn',
-        'client_id': 'ODYxNTU2NzA4NDU0LWQ2ZGxtM2xoMDVpZGQ4bnBlazE4azZiZThiYTNvYzY4',
-        'client_secret': 'U2JvVmhvRzlzMHJOYWZpeENTR0dLWEFU',
-    },
-    'youtube-vr': {
-        'api_key': '',
-        'client_id': 'NjUyNDY5MzEyMTY5LTRsdnM5Ym5ocjlscG5zOXY0NTFqNW9pdmQ4MXZqdnUx',
-        'client_secret': 'M2ZUV3JCSkk1VW9qbTFUSzdfaUpDVzVa',
+        'id': 'ODYxNTU2NzA4NDU0LWQ2ZGxtM2xoMDVpZGQ4bnBlazE4azZiZThiYTNvYzY4',
+        'key': 'QUl6YVN5QzZmdlpTSkhBN1Z6NWo4akNpS1J0N3RVSU9xakUyTjNn',
+        'secret': 'U2JvVmhvRzlzMHJOYWZpeENTR0dLWEFU'
     },
     'provided': {
         '0': {
-            'api_key': '',
-            'client_id': '',
-            'client_secret': '',
+            'id': 'AIzaSyA9nG9Co3Vwu3UwJU3uzDoiyW9KcZ9ZJ-Y',
+            'key': '799190732597-d8ksmfulg9a7u5g4b8t5rjanc9160ovo',
+            'secret': 'ELOdfhsz-UNCMxsbLyAwlfL5'
         }
     }
 }
 
-__all__ = ('kodion', 'youtube', 'key_sets',)
+__all__ = ['kodion', 'youtube', 'key_sets', 'refresh']

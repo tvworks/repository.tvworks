@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    Copyright (C) 2018-2025 plugin.video.youtube
+    Copyright (C) 2018-2018 plugin.video.youtube
 
     SPDX-License-Identifier: GPL-2.0-only
     See LICENSES/GPL-2.0-only for more information.
 """
 
-from __future__ import absolute_import, division, unicode_literals
-
-from youtube_plugin.kodion import logging
-from youtube_plugin.kodion.constants import ADDON_ID
-from youtube_plugin.kodion.context import XbmcContext
+from base64 import b64encode
+from youtube_plugin.kodion.json_store import APIKeyStore
+from youtube_plugin.kodion.impl import Context
 
 
 def register_api_keys(addon_id, api_key, client_id, client_secret):
@@ -42,20 +40,29 @@ def register_api_keys(addon_id, api_key, client_id, client_secret):
     :param client_secret: YouTube Data v3 Client secret
     """
 
-    if not addon_id or addon_id == ADDON_ID:
-        logging.error_trace('Invalid addon_id: %r', addon_id)
+    context = Context(plugin_id='plugin.video.youtube')
+
+    if not addon_id or addon_id == 'plugin.video.youtube':
+        context.log_error('Register API Keys: |%s| Invalid addon_id' % addon_id)
         return
 
-    context = XbmcContext()
+    api_jstore = APIKeyStore()
+    json_api = api_jstore.get_data()
 
     access_manager = context.get_access_manager()
-    if access_manager.add_new_developer(addon_id):
-        logging.debug('Creating developer user: %r', addon_id)
 
-    api_store = context.get_api_store()
-    if api_store.update_developer_config(
-            addon_id, api_key, client_id, client_secret
-    ):
-        logging.debug('Keys registered: %r', addon_id)
+    jkeys = json_api['keys']['developer'].get(addon_id, {})
+
+    api_keys = {'origin': addon_id, 'main': {'system': 'JSONStore', 'key': b64encode(api_key), 'id': b64encode(client_id), 'secret': b64encode(client_secret)}}
+    if jkeys and jkeys == api_keys:
+        context.log_debug('Register API Keys: |%s| No update required' % addon_id)
     else:
-        logging.debug('No update performed: %r', addon_id)
+        json_api['keys']['developer'][addon_id] = api_keys
+        api_jstore.save(json_api)
+        context.log_debug('Register API Keys: |%s| Keys registered' % addon_id)
+
+    developers = access_manager.get_developers()
+    if not developers.get(addon_id, None):
+        developers[addon_id] = access_manager.get_new_developer()
+        access_manager.set_developers(developers)
+        context.log_debug('Creating developer user: |%s|' % addon_id)
