@@ -91,24 +91,6 @@ v1.0.0.matrix.1
 - Addon modelo
 	</news>
 </extension>
-</addon><addon id="plugin.video.vavooto" name="VAVOO.TO" version="2025.11.10" provider-name="kasi,michaz">
-	<requires>
-		<import addon="script.module.requests" optional="true" />
-		<import addon="script.module.resolveurl" optional="true" />
-		<import addon="script.module.dateutil" optional="true" />
-		<import addon="inputstream.adaptive" optional="true" /> 
-		<import addon="inputstream.ffmpegdirect" optional="true" /> 
-		<import addon="script.module.infotagger" optional="true" />
-	</requires>
-	<extension point="xbmc.python.pluginsource" library="resources/main.py">
-		<provides>video</provides>
-	</extension>
-	<extension point="xbmc.python.module" library="resources" />
-	<extension point="xbmc.addon.metadata">
-		<assets>
-			<icon>icon.png</icon>
-		</assets>
-	</extension>
 </addon><addon id="repository.a4ksubtitles" name="a4kSubtitles Repository" version="1.1.1" provider-name="Unknown">
     <extension point="xbmc.addon.repository">
         <dir>
