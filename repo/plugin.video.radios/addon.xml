@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.testando2.matrix" name="Teste" version="1.0.1+matrix.1" provider-name="nome do criador"> 
+<addon id="plugin.video.testando2.matrix" name="RADIOS" version="1.0.1+matrix.1" provider-name="nome do criador"> 
 <requires>
     <import addon="xbmc.python" version="3.0.0"/>
     <import addon="script.module.requests"/>
