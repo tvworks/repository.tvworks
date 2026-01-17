@@ -64,6 +64,24 @@ v1.0.0.matrix.1
 - Addon modelo
 	</news>
 </extension>
+</addon><addon id="plugin.video.vavooto" name="VAVOO.TO" version="2025.11.10" provider-name="kasi,michaz">
+	<requires>
+		<import addon="script.module.requests" />
+		<import addon="script.module.resolveurl" />
+		<import addon="script.module.dateutil" />
+		<import addon="inputstream.adaptive" /> 
+		<import addon="inputstream.ffmpegdirect" /> 
+		<import addon="script.module.infotagger" />
+	</requires>
+	<extension point="xbmc.python.pluginsource" library="resources/main.py">
+		<provides>video</provides>
+	</extension>
+	<extension point="xbmc.python.module" library="resources" />
+	<extension point="xbmc.addon.metadata">
+		<assets>
+			<icon>icon.png</icon>
+		</assets>
+	</extension>
 </addon><addon id="repository.a4ksubtitles" name="a4kSubtitles Repository" version="1.1.1" provider-name="Unknown">
     <extension point="xbmc.addon.repository">
         <dir>
@@ -221,25 +239,6 @@ v1.0.0.matrix.1
         <description>TVWorks Repo</description>
         <disclaimer />
         <platform>all</platform>
-        <assets>
-            <icon>icon.png</icon>
-            <fanart>fanart.jpg</fanart>
-        </assets>
-    </extension>
-</addon><addon id="script.tvworks.auto.player" name="TVWORKS AUTO PLAYER" version="1.2.4" provider-name="@tvworks">
-    <requires>
-        <import addon="script.module.six" />
-        <import addon="script.module.kodi-six" />
-    </requires>
-    <extension point="xbmc.python.script" library="default.py" />
-    <extension point="xbmc.addon.metadata">
-        <summary lang="en">addon, to modify kodi player</summary>
-        <summary lang="pt">addon, para modificar player do kodi</summary>
-        <description lang="en">ESTE ADDON NÃO FOI CRIADO POR MIM, FOI CRIADO POR O FLECHA EU APENAS EDITEI CONFORME ME CONVINHA</description>
-        <description lang="pt">ESTE ADDON NÃO FOI CRIADO POR MIM, FOI CRIADO POR O FLECHA EU APENAS EDITEI CONFORME ME CONVINHA</description>
-        <platform>all</platform>
-        <license>GNU GENERAL PUBLIC LICENSE. Version 1, 12 June 2022</license>
-        <disclaimer>The author of this addon do not host any of the content which is found and have no affiliation with any of the content providers. This addon simply searches websites for content. Use at your own risk!</disclaimer>
         <assets>
             <icon>icon.png</icon>
             <fanart>fanart.jpg</fanart>
